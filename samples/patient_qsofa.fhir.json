@@ -1,0 +1,39 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "code": {
+          "coding": [
+            { "system": "http://loinc.org", "code": "9279-1", "display": "Respiratory rate" }
+          ]
+        },
+        "valueQuantity": { "value": 24, "unit": "breaths/min" }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "code": {
+          "coding": [
+            { "system": "http://loinc.org", "code": "8480-6", "display": "Systolic blood pressure" }
+          ]
+        },
+        "valueQuantity": { "value": 92, "unit": "mmHg" }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "code": {
+          "coding": [
+            { "system": "http://loinc.org", "code": "9269-2", "display": "Glasgow coma score total" }
+          ]
+        },
+        "valueInteger": 14
+      }
+    }
+  ]
+}
