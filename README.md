@@ -85,6 +85,9 @@ The clinical demo adds a small qSOFA plugin that reads a synthetic FHIR Bundle a
 │   └── qsofa.c
 ├── samples/
 │   └── patient_qsofa.fhir.json
+├── docs/
+│   ├── threat_model.md
+│   └── medical_safety.md
 ├── fake_medical_app.c
 ├── memory_hog.c
 ├── file_writer.c
@@ -113,6 +116,24 @@ Install dependencies:
 ```bash
 sudo apt update
 sudo apt install build-essential libseccomp-dev libcap-dev libjansson-dev
+```
+
+## Tested Environment
+
+The project was tested locally on a Debian Linux environment with:
+
+- GCC;
+- glibc;
+- libseccomp;
+- libcap;
+- Jansson.
+
+You can check your local versions with:
+
+```bash
+gcc --version
+ldd --version
+dpkg -l | grep -E 'libseccomp-dev|libcap-dev|libjansson-dev'
 ```
 
 ## Build
@@ -348,6 +369,19 @@ Run with `chroot`:
 ```
 
 Some namespace and chroot features may require elevated privileges depending on the system.
+
+## Fresh Clone Test
+
+To verify the repository from a clean clone:
+
+```bash
+cd /tmp
+git clone git@github.com:ImaneElHamdouchi/medsandbox.git
+cd medsandbox
+make
+make demo-qsofa
+make demo-security
+```
 
 ## Development Commands
 
