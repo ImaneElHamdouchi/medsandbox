@@ -51,10 +51,17 @@ demo-security: all
 
 demo-all: demo-qsofa demo-security
 
+test: all
+	./tests/test_qsofa.sh
+	./tests/test_network_block.sh
+	./tests/test_memory_limit.sh
+	./tests/test_file_limit.sh
+	./tests/test_ptrace_block.sh
+
 clean:
 	rm -f medsandbox fake_medical_app memory_hog file_writer network_test ptrace_test fork_bomb
 	rm -f $(CLINICAL_DIR)/qsofa
 	rm -f big_output.txt
 	rm -f $(OUT_DIR)/*.json $(OUT_DIR)/*.txt
 
-.PHONY: all dirs demo-qsofa demo-security demo-all clean
+.PHONY: all dirs demo-qsofa demo-security demo-all test clean
