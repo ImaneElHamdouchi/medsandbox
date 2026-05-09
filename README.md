@@ -440,4 +440,6 @@ It is designed as a portfolio project connecting software engineering, Linux sec
 
 ## License
 
-Educational project. Add your preferred open-source license before publishing.
+This project is licensed under the MIT License.
+
+MedSandbox is an educational project and is not intended for real patient care or production clinical use.
