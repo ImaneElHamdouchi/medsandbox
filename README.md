@@ -1,5 +1,7 @@
 # MedSandbox
 
+[![CI](https://github.com/ImaneElHamdouchi/medsandbox/actions/workflows/ci.yml/badge.svg)](https://github.com/ImaneElHamdouchi/medsandbox/actions/workflows/ci.yml)
+
 MedSandbox is an educational Linux sandbox written in C for running and supervising experimental programs in a constrained environment.
 
 The current healthcare demo runs a small qSOFA clinical scoring plugin on synthetic FHIR data. The goal is not to build a medical device, but to explore how clinical or research plugins could be executed with resource limits, syscall filtering, output capture, and audit logs.
