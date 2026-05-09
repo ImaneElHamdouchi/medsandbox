@@ -1,57 +1,51 @@
 # MedSandbox
 
-MedSandbox is an educational Linux sandbox written in C for safely executing experimental clinical decision-support plugins on synthetic FHIR data.
+MedSandbox is an educational Linux sandbox written in C for running and supervising experimental programs in a constrained environment.
 
-It combines Linux process management, resource limits, seccomp syscall filtering, `/proc` monitoring, cgroup support, JSON audit logs, and a healthcare-focused plugin demo using qSOFA.
+The current healthcare demo runs a small qSOFA clinical scoring plugin on synthetic FHIR data. The goal is not to build a medical device, but to explore how clinical or research plugins could be executed with resource limits, syscall filtering, output capture, and audit logs.
 
 > Disclaimer: MedSandbox is not a medical device and is not intended for real patient care. All clinical examples use synthetic data for educational and portfolio purposes only.
 
-## Overview
+## Why I Built This
 
-Healthcare software may need to run external tools, research scripts, scoring algorithms, or clinical decision-support plugins. These programs can be useful, but they should not automatically be trusted.
+I started MedSandbox to practice Linux sandboxing in C and to connect it with my medical background.
 
-An external plugin may accidentally or intentionally:
+The idea is simple: clinical scoring tools or research plugins may be useful, but they should not automatically be trusted. Before running an external clinical plugin, I wanted to explore how to limit its resources, block dangerous system calls, capture its output, and keep an audit trail.
 
-- consume too much memory or CPU;
-- run forever;
-- create too many processes;
-- write large files;
-- attempt network access;
-- inspect other processes using `ptrace`;
-- produce unaudited clinical output.
+The current demo runs a qSOFA plugin on synthetic FHIR data inside a restricted Linux environment.
 
-MedSandbox demonstrates how such programs can be executed inside a controlled Linux environment with security, resource control, and auditability in mind.
+## Current State
 
-## Key Features
+Implemented and tested:
 
-- Process execution with `fork`, `execvp`, and `waitpid`
-- Wall-clock timeout enforcement
-- Resource limits with `setrlimit`
-  - memory limit
-  - CPU time limit
-  - file size limit
-  - process count limit
-- Seccomp syscall filtering
-  - network syscall blocking
-  - `ptrace` blocking
-  - readonly mode
-  - clinical allowlist mode
-- `/proc/<pid>/status` monitoring
-  - process state
-  - memory usage
-  - peak memory
-  - thread count
-- JSON audit logs using Jansson
-- stdout and stderr capture
-- Optional cgroup v2 support
-- Optional Linux namespaces
-  - network namespace
-  - UTS namespace
-  - PID namespace
-  - mount namespace
-- Optional `chroot` root filesystem
-- Basic syscall tracing with `ptrace`
-- Clinical plugin example: qSOFA on synthetic FHIR data
+- process execution with `fork`, `execvp`, and `waitpid`;
+- memory, CPU, file size, and process limits with `setrlimit`;
+- network syscall blocking with seccomp;
+- `ptrace` blocking in strict mode;
+- readonly restrictions for common file write operations;
+- `/proc/<pid>/status` monitoring;
+- stdout and stderr capture;
+- JSON audit logs using Jansson;
+- qSOFA clinical plugin using synthetic FHIR data.
+
+Experimental or partially implemented:
+
+- namespace isolation;
+- cgroup v2 support;
+- `chroot` rootfs mode;
+- ptrace-based syscall tracing;
+- clinical seccomp allowlist tuning across different Linux/glibc versions.
+
+## Main Features
+
+MedSandbox currently focuses on four things:
+
+1. Running a target program under supervision.
+2. Applying resource limits before execution.
+3. Blocking selected risky syscalls with seccomp.
+4. Producing readable reports and JSON audit logs.
+
+The clinical demo adds a small qSOFA plugin that reads a synthetic FHIR Bundle and returns a JSON result.
 
 ## Architecture
 
@@ -91,18 +85,23 @@ MedSandbox demonstrates how such programs can be executed inside a controlled Li
 │   └── qsofa.c
 ├── samples/
 │   └── patient_qsofa.fhir.json
-├── logs/
-│   └── sandbox.log
-├── out/
-│   └── qsofa_result.json
 ├── fake_medical_app.c
 ├── memory_hog.c
 ├── file_writer.c
 ├── network_test.c
 ├── ptrace_test.c
 ├── fork_bomb.c
-├── build_rootfs.sh
-└── sandbox_root/
+└── build_rootfs.sh
+```
+
+Generated at runtime and ignored by Git:
+
+```text
+logs/
+out/
+sandbox_root/
+big_output.txt
+compiled binaries
 ```
 
 ## Requirements
@@ -165,28 +164,19 @@ Example output:
 
 ## Security Demo
 
-Run all security demonstrations:
+Run the security demonstrations:
 
 ```bash
 make demo-security
 ```
 
-This runs:
+Current observed results:
 
 ```text
-network_test    -> blocked by seccomp
-memory_hog      -> blocked by memory limit
-file_writer     -> blocked by file size limit
-ptrace_test     -> blocked by seccomp
-```
-
-Example observed results:
-
-```text
-Network syscall blocked: SIGSYS / Bad system call
-Memory limit enforced: malloc failed
-File size limit enforced: SIGXFSZ / File size limit exceeded
-ptrace blocked: SIGSYS / Bad system call
+network_test  -> blocked with SIGSYS / Bad system call
+memory_hog    -> malloc failed under memory limit
+file_writer   -> terminated with SIGXFSZ / File size limit exceeded
+ptrace_test   -> blocked with SIGSYS / Bad system call
 ```
 
 ## Example Commands
@@ -312,7 +302,7 @@ The clinical demo uses a synthetic FHIR Bundle containing observations for qSOFA
 - systolic blood pressure: LOINC `8480-6`
 - Glasgow Coma Score: LOINC `9269-2`
 
-FHIR is used because it is a major healthcare interoperability standard for exchanging electronic health information.
+FHIR is used here as a simple healthcare data format for the demo. The sample file is synthetic and does not contain real patient information.
 
 ## Clinical Plugin: qSOFA
 
@@ -328,28 +318,20 @@ A score of 2 or more is reported as a positive screen requiring clinical review.
 
 This is implemented only as an educational demonstration and must not be used for real clinical decisions.
 
-## Threat Model
+## Known Limitations
 
-MedSandbox assumes the target program may be buggy, experimental, or untrusted.
-
-It attempts to reduce risk by:
-
-- limiting resource exhaustion;
-- blocking common dangerous syscalls;
-- preventing network access in restricted profiles;
-- preventing many file-write operations in readonly profiles;
-- recording execution behavior in audit logs.
-
-MedSandbox does not claim to provide production-grade container isolation. It is an educational sandbox and security research project.
+MedSandbox is not production-grade isolation.
 
 Known limitations:
 
-- not a replacement for containers, VMs, or hardened production sandboxes;
-- `chroot` is not a complete security boundary by itself;
-- syscall allowlists may need tuning per binary and libc version;
-- namespace features may require privileges depending on the host;
-- cgroup support depends on host configuration;
-- clinical examples are synthetic and educational.
+- the seccomp allowlist may need adjustments between Linux distributions or glibc versions;
+- `chroot` alone is not a complete security boundary;
+- namespace support is still experimental;
+- cgroup support depends on the host system configuration;
+- the clinical plugin uses synthetic data only;
+- qSOFA is included as an educational example, not as a medical recommendation engine.
+
+One issue observed during testing: `/proc` snapshots may sometimes show the child process before `execvp()` fully replaces it, so the process name in logs can briefly appear as `medsandbox`.
 
 ## RootFS Demo
 
@@ -418,25 +400,23 @@ Planned improvements:
   - UndefinedBehaviorSanitizer
   - Valgrind
 - add SHA-256 hashing of plugins and input files in logs;
-- add stronger namespace and rootfs isolation;
+- improve namespace and rootfs isolation;
 - add cgroup CPU and IO controls;
-- add a detailed threat model document;
+- add a more detailed threat model document;
 - add a regulatory note explaining why this is not a medical device.
 
-## Portfolio Summary
+## What This Project Shows
 
-MedSandbox demonstrates a combination of:
+This project helped me practice:
 
-- C systems programming;
-- Linux process management;
-- operating system security;
-- seccomp syscall filtering;
-- resource control;
-- JSON audit logging;
-- healthcare interoperability concepts;
-- clinical decision-support safety awareness.
+- Linux process control in C;
+- resource limiting;
+- seccomp filtering;
+- JSON logging;
+- basic clinical data processing;
+- thinking about safety boundaries around clinical software.
 
-It is designed as a portfolio project connecting software engineering, Linux security, and medical knowledge.
+It reflects my interest in building software at the intersection of systems programming, security, and healthcare.
 
 ## License
 
